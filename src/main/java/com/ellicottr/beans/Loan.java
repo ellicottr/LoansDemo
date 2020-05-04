@@ -13,20 +13,40 @@ import java.time.LocalDate;
 @Entity
 @Table(name = "Loans")
 public class Loan {
+
     @Id
-    private String ssn;
-    private LocalDate dob;
-    private double loanAmount;
-    private double rate;
-    private int loanType;
-    private int term;
-    private double apr;
+    public String ssn;
+    public LocalDate dob;
+    public double loanAmount;
+    public double rate;
+    public int loanType;
+    public int term;
+    public double apr;
 
     public double calculateApr(Loan data) {
-        double interest = data.getLoanAmount() * (data.getRate()/100) * data.getTerm() / 100;
-        double principal = data.getLoanAmount();
-        int fee = 0;
-        switch (data.getLoanType()) {
+        double interest = getInterest(data);
+        double principal = getPrincipal(data);
+        int term = getTerm(data);
+
+        double apr = ((((getFee(data.getLoanType()) + interest) / principal) / term) * 365) * 100;
+        BigDecimal bd = new BigDecimal(Double.toString(apr));
+        bd = bd.setScale(2, RoundingMode.HALF_EVEN);
+        return bd.doubleValue();
+    }
+    public double getInterest(Loan data) {
+        return data.getLoanAmount() * (data.getRate()/100) * data.getTerm() / 100;
+    }
+    public double getPrincipal(Loan data) {
+        return data.getLoanAmount();
+    }
+    public int getTerm(Loan data) {
+        return data.getTerm();
+    }
+
+    public int getFee(int loanType) {
+        // This could also be put into the database and looked up
+        int fee;
+        switch (loanType) {
             case 2: //Auto
                 fee = 500;
                 break;
@@ -40,9 +60,6 @@ public class Loan {
             default:
                 fee = 0;
         }
-        double apr = ((((fee + interest) / principal) / data.getTerm()) * 365) * 100;
-        BigDecimal bd = new BigDecimal(Double.toString(apr));
-        bd = bd.setScale(2, RoundingMode.HALF_EVEN);
-        return bd.doubleValue();
+        return fee;
     }
 }
